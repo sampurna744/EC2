@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMI Calculator</title>
+    <style>
+        /* ---------- STYLE.CSS CONTENT ---------- */
+        body {
+            font-family: Arial;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        #form {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        #form input {
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        #submit {
+            padding: 10px;
+            background: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        #clear {
+            padding: 10px;
+            background: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        #result {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>BMI Calculator</h1>
+    <div id="form">
+        <input type="text" id="name" placeholder="Name">
+        <input type="number" id="height" placeholder="Height (m)" step="0.01">
+        <input type="number" id="weight" placeholder="Weight (kg)" step="0.1">
+        <input type="number" id="waist" placeholder="Waist (cm)" step="0.1">
+        <input type="number" id="hip" placeholder="Hip (cm)" step="0.1">
+        <button id="submit">Calculate</button>
+        <button id="clear">Clear</button>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        /* ---------- SCRIPT.JS CONTENT ---------- */
+        const API_URL = 'https://mr9ozcqg4k.execute-api.us-east-1.amazonaws.com/sampurnabmitest/calculatorbmi';
+
+        async function submitEntry() {
+            const name = document.getElementById('name').value.trim();
+            const height = parseFloat(document.getElementById('height').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            const waist = parseFloat(document.getElementById('waist').value);
+            const hip = parseFloat(document.getElementById('hip').value);
+
+            // Validate input
+            if (!name || isNaN(height) || isNaN(weight) || isNaN(waist) || isNaN(hip) ||
+                height <= 0 || weight <= 0 || waist <= 0 || hip <= 0) {
+                alert("Please fill in all fields with valid numbers.");
+                return;
+            }
+
+            const data = { name, height, weight, waist, hip };
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (!res.ok) {
+                    throw new Error(`Server error: ${res.status}`);
+                }
+
+                const result = await res.json();
+
+                // Display results
+                document.getElementById('result').innerHTML = `
+                    <h2>${result.name}</h2>
+                    <p><strong>BMI:</strong> ${result.bmi} (${result.bmi_category})</p>
+                    <p><strong>BAI:</strong> ${result.bai} (${result.bai_category})</p>
+                    <p><strong>Waist-to-Hip Ratio:</strong> ${result.whr} (${result.whr_category})</p>
+                `;
+
+                clearForm();
+            } catch (err) {
+                document.getElementById('result').innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+            }
+        }
+
+        // Clear input fields
+        function clearForm() {
+            document.getElementById('name').value = '';
+            document.getElementById('height').value = '';
+            document.getElementById('weight').value = '';
+            document.getElementById('waist').value = '';
+            document.getElementById('hip').value = '';
+        }
+
+        // Event listeners
+        document.getElementById('submit').addEventListener('click', submitEntry);
+        document.getElementById('clear').addEventListener('click', clearForm);
+    </script>
+</body>
+</html>
